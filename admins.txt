@@ -1,3 +1,2 @@
 ; This is a list that contains administrators that are allowed to use commands like !quit or !reload
 
-sss
