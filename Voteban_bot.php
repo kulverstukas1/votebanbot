@@ -303,9 +303,8 @@ class VotebanBot {
             $msg = $this->utils->splitStr(' ', $rawOutput); // splits, trims and makes it all lowercase
             if ($msg[0] == 'ping') { // here we check if it is a PING command
                 $this->sendPong($msg[1]);
-            } else if ($msg[1] == 'notice') { // Thanks to @connection for patching this bug
-                return; // Do nothing with NOTICE commands which can be abused to spam...
-                } else if (count($msg) >= 4) { // check if it's truely an array we need
+            // Do nothing with NOTICE and PRIVMSG commands which can be abused to spam...
+            } else if ((count($msg) >= 4) && (($msg[1] != 'notice') || ($msg[2] == $this->config['channel']))) { // check if it's truely an array we need
                 if ($msg[3] == ':!info') {
                     $this->printInfo($this->config['channel']);
                 } else if ($msg[3] == ':!voteban') { // voteban began!
