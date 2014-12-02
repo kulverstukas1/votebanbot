@@ -1,7 +1,4 @@
 logs/*
 *.txt
-!admins.txt
-!allowed_to_vote.txt
-!configs.txt
 !README.txt
-!whitelist.txt
+.gitignore
