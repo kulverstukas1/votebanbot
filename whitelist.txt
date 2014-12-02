@@ -1,0 +1,2 @@
+; This is a list that contains names that cannot be banned with this bot
+

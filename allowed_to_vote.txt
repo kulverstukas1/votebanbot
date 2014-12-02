@@ -1,0 +1,2 @@
+; This is a list that contains people that are allowed to vote
+
