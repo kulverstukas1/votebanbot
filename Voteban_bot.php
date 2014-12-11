@@ -304,7 +304,8 @@ class VotebanBot {
             if ($msg[0] == 'ping') { // here we check if it is a PING command
                 $this->sendPong($msg[1]);
             // Do nothing with NOTICE and PRIVMSG commands which can be abused to spam...
-            } else if ((count($msg) >= 4) && (($msg[1] != 'notice') || ($msg[2] == $this->config['channel']))) { // check if it's truely an array we need
+            // } else if ((count($msg) >= 4) && ($msg[1] != 'notice') || ($msg[2] == $this->config['channel'])) {
+            } else if ((count($msg) >= 4) && (($msg[1] != 'notice') && ($msg[2] == $this->config['channel']))) { // check if it's truely an array we need
                 if ($msg[3] == ':!info') {
                     $this->printInfo($this->config['channel']);
                 } else if ($msg[3] == ':!voteban') { // voteban began!

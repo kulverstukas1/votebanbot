@@ -5,6 +5,7 @@ port=6667
 
 nick=VotebanBot
 name=Voteban
+; channel name should be in all lowercase, otherwise it might not work
 channel=#test
 
 ; change it to NO if your bot name isn't registered
