@@ -209,7 +209,7 @@ class VotebanBot {
                     break;
                 }
             } else if ((count($lineParts) >= 4) && ($lineParts[3] == ':!votestatus')) {
-                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Received '.$yesCount.':'.$noCount.' (total: '.($yesCount+$noCount).') votes. Time left for voting: '.$this->utils->formatTimeLeft((time() - $startTime))."\r\n");
+                fwrite($this->socket, "PRIVMSG ".$this->config['channel']." :Received $yesCount:$noCount (total: ".($yesCount+$noCount).") votes. Voting on ".$banProfile['nickname']." with reason: ".$initProfile['reason'].". Time left for voting: ".$this->utils->formatTimeLeft((time() - $startTime))."\r\n");
                 if ($this->config['verbose_output']) {
                     $this->utils->logToFileAndPrint("[+] Responded to !votestatus command by $nickVoted ($votedHostname)");
                 }
