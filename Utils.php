@@ -61,58 +61,87 @@ class Utils {
     // Reads lists into arrays, doesn't support in-line comments
     public function readLists() {
         // reads whitelist
-        $this->whitelistArr = array(); // reset
-        $fHandle = fopen($this->whitelist, "r");
-        if ($fHandle) {
-            while (($line = fgets($fHandle)) !== false) {
-                if (($line[0] != ';') && (trim($line) != '')) {
-                    array_push($this->whitelistArr, trim($line));
-                    //print $line;
+        if (file_exists($this->whitelist)) {
+            $this->whitelistArr = array(); // reset
+            $fHandle = fopen($this->whitelist, "r");
+            if ($fHandle) {
+                while (($line = fgets($fHandle)) !== false) {
+                    if (($line[0] != ';') && (trim($line) != '')) {
+                        array_push($this->whitelistArr, trim($line));
+                        //print $line;
+                    }
                 }
+                fclose($fHandle);
+            } else {
+                print "[-] Error opening ".$this->whitelist." file\n";
+                exit(1);
             }
-            fclose($fHandle);
-        } else {
-            print "[-] Error opening ".$this->whitelist." file\n";
-            exit(1);
+        } else { // file doesn't exist, let's create it!
+            $this->createWhitelistFile();
         }
         
         // read allowed to vote list
-        $this->allowedToVoteArr = array(); // reset
-        $fHandle = fopen($this->allowedToVote, "r");
-        if ($fHandle) {
-            while (($line = fgets($fHandle)) !== false) {
-                if (($line[0] != ';') && trim($line) != '') {
-                    array_push($this->allowedToVoteArr, trim($line));
-                    // print $line;
+        if (file_exists($this->allowedToVote)) {
+            $this->allowedToVoteArr = array(); // reset
+            $fHandle = fopen($this->allowedToVote, "r");
+            if ($fHandle) {
+                while (($line = fgets($fHandle)) !== false) {
+                    if (($line[0] != ';') && trim($line) != '') {
+                        array_push($this->allowedToVoteArr, trim($line));
+                        // print $line;
+                    }
                 }
+                fclose($fHandle);
+            } else {
+                print "[-] Error opening ".$this->allowedToVoteArr." file\n";
+                exit(1);
             }
-            fclose($fHandle);
         } else {
-            print "[-] Error opening ".$this->allowedToVoteArr." file\n";
-            exit(1);
+            $this->createAllowedToVoteFile();
         }
         
         // read the admin list
-        $this->adminsArr = array(); // reset
-        $fHandle = fopen($this->admins, "r");
-        if ($fHandle) {
-            while (($line = fgets($fHandle)) !== false) {
-                if (($line[0] != ';') && trim($line) != '') {
-                    array_push($this->adminArr, trim($line));
-                    // print $line;
+        if (file_exists($this->admins)) {
+            $this->adminsArr = array(); // reset
+            $fHandle = fopen($this->admins, "r");
+            if ($fHandle) {
+                while (($line = fgets($fHandle)) !== false) {
+                    if (($line[0] != ';') && trim($line) != '') {
+                        array_push($this->adminArr, trim($line));
+                        // print $line;
+                    }
                 }
+                fclose($fHandle);
+            } else {
+                print "[-] Error opening ".$this->admins." file\n";
+                exit(1);
             }
-            fclose($fHandle);
         } else {
-            print "[-] Error opening ".$this->admins." file\n";
-            exit(1);
+            $this->createAdminFile();
         }
         
         if ($this->config['verbose_output']) {
             print "[+] Lists re-read\n";
         }
     }
-    //=============================================================
+//=============================================================
+    private function createWhitelistFile() {
+        $fHandle = fopen($this->whitelist, "w");
+        fwrite($fHandle, "; This is a list that contains names that cannot be banned with this bot\r\n\r\n");
+        fclose($fHandle);
+    }
+    
+    private function createAllowedToVoteFile() {
+        $fHandle = fopen($this->allowedToVote, "w");
+        fwrite($fHandle, "; This is a list that contains people that are allowed to vote\r\n\r\n");
+        fclose($fHandle);
+    }
+    private function createAdminFile() {
+        $fHandle = fopen($this->admins, "w");
+        fwrite($fHandle, "; This is a list that contains administrators that are allowed to use commands like !quit or !reload\r\n\r\n");
+        fclose($fHandle);
+    }
+//=============================================================
     // function to add to the lists
     public function addToWhiteList($nickname) {
         $nickname = strtolower($nickname);
@@ -135,7 +164,7 @@ class Utils {
             array_push($this->adminArr, $nickname);
         }
     }
-    //=============================================================
+//=============================================================
     // functions to remove from the lists
     public function removeFromWhiteList($nickname) {
         $nickname = strtolower($nickname);
@@ -191,7 +220,7 @@ class Utils {
             }
         }
     }
-    //=============================================================
+//=============================================================
     // functions to check if the given user is in the lists
     public function isInWhitelist($nickname) {
         $nickname = strtolower($nickname);
@@ -206,13 +235,13 @@ class Utils {
         $nickname = strtolower($nickname);
         return in_array($nickname, $this->adminArr);
     }
-    //=============================================================
+//=============================================================
     // Extracts the sender nickname
     public function extractNickname($rawOutput) {
         $end = strpos($rawOutput, '!');
         return strtolower(substr($rawOutput, 1, $end-1));
     }
-    //=============================================================
+//=============================================================
     // Extracts the reason for banning
     public function extractReason($rawOutput) {
         $arr = $this->splitStr(' ', $rawOutput);
@@ -223,7 +252,7 @@ class Utils {
         // print $reason;
         return trim($reason);
     }
-    //=============================================================
+//=============================================================
     // Extracts user hostname
     public function extractHostname($rawOutput) {
         $start = strpos($rawOutput, '@')+1;
@@ -237,38 +266,38 @@ class Utils {
             return strtolower(substr($rawOutput, $start));
         }
     }
-    //=============================================================
+//=============================================================
     public function shouldSendNotice() {
         return $this->config['send_notice'];
     }
-    //=============================================================
+//=============================================================
     public function connectionAborted($rawOutput) {
         return $this->startsWith($rawOutput, 'ERROR :Closing Link');
     }
-    //=============================================================
+//=============================================================
     public function wasKicked($rawOutput, $botName) {
         return $this->contains(strtolower($rawOutput), 'kick') && $this->contains(strtolower($rawOutput), ' '.strtolower($botName).' ');
     }
-    //=============================================================
+//=============================================================
     // Helper function to check if a string contains a substring
     public function contains($where, $what) {
         return (strpos($where, $what) !== false);
     }
-    //=============================================================
+//=============================================================
     // Helper function to check if a string starts with a substring
     public function startsWith($where, $what) {
         return $where === "" || strpos($where, $what) === 0;
     }
-    //=============================================================
+//=============================================================
     public function endsWith($haystack, $needle) {
         return $needle === "" || substr($haystack, -strlen($needle)) === $needle;
     }
-    //=============================================================
+//=============================================================
     // Splits the input and trims every element in the array
     public function splitStr($char, $string) {
         return array_map('strtolower', array_map('trim', explode($char, $string)));
     }
-    //=============================================================
+//=============================================================
     public function readConfig() {
         // $config = array(); // reset
         if (count($this->argv) >= 2) {
@@ -308,7 +337,7 @@ class Utils {
         }
         return $this->config;
     }
-    //=============================================================
+//=============================================================
     public function changeConfig($configStr, $value) {
         $data = file_get_contents($this->argv[1]);
         $newData = "";
@@ -349,7 +378,7 @@ class Utils {
             return null;
         }
     }
-    //=============================================================
+//=============================================================
     public function logToFileAndPrint($entry) {
         $formattedFile = sprintf($this->logFile, $this->config['server'], $this->config['channel'], $this->config['nick']);
         $currTime = '['.date('Y.m.d, G:i:s').'] ';
@@ -359,11 +388,11 @@ class Utils {
         file_put_contents($this->logFolder.'/'.$formattedFile, $currTime.$entry."\r\n", FILE_APPEND);
         print $currTime.$entry."\n";
     }
-    //=============================================================
+//=============================================================
     public function formatTimeLeft($secs) {
         return strftime("%M:%S", ($this->config['timeout']*60)-$secs);
     }
-    //=============================================================
+//=============================================================
 }
 
 ?>
