@@ -49,17 +49,28 @@ class VotebanBot {
             fwrite($this->socket, 'NICK '.$this->config['nick']."\r\n");
 
             while (true) { // whenever we send shit, we also have to read what comes out, otherwise the socket refuses input while it has data to give
-                $lineParts = $this->utils->splitStr(' ', fgets($this->socket));
+                $tmp = fgets($this->socket);
+                $lineParts = $this->utils->splitStr(' ', $tmp);
+                // print_r($lineParts); die();
                 if ($lineParts[0] == 'ping') {
                     $this->sendPong($lineParts[1], $this->socket);
                     break;
+                } else if ($lineParts[0] == 'error') {
+                    $this->utils->logToFileAndPrint(trim($tmp));
+                    $this->utils->logToFileAndPrint("[*] Waiting 1 minute");
+                    sleep(60);
+                    $this->initiate();
+                } else {
+                    break;
                 }
             }
-            // if the link gets closed, this is where it'll go down
-            if ($this->utils->connectionAborted(fgets($this->socket))) {
-                print "[-] Link was closed! Try changing your nickname.";
-                exit(1);
-            }
+            // if the link gets closed, this is where it'll go down with a bad name
+            // $tmp = fgets($this->socket);
+            // if ($this->utils->connectionAborted($tmp)) {
+                // print "[-] Link was closed!\n";
+                // print $tmp;
+                // exit(1);
+            // }
             $this->utils->logToFileAndPrint("[+] Connected");
             // usleep(100);
             
@@ -102,17 +113,17 @@ class VotebanBot {
                 break;
             } else if ($this->utils->contains($rawOutput, '471')) { // ERR_CHANNELISFULL
                 $this->utils->logToFileAndPrint("[-] Could not join ".$this->config['channel'].". Error: channel is full");
-                $this->utils->logToFileAndPrint("[*] Waiting ".$this->config['timeout']." minute(s)");
+                $this->utils->logToFileAndPrint("[*] Waiting 1 minute");
                 sleep(60); // retry every minute
                 fwrite($this->socket, 'JOIN '.$this->config['channel']."\r\n");
             } else if ($this->utils->contains($rawOutput, '473')) { // ERR_INVITEONLYCHAN
                 $this->utils->logToFileAndPrint("[-] Could not join ".$this->config['channel'].". Error: channel is invite only");
-                $this->utils->logToFileAndPrint("[*] Waiting ".$this->config['timeout']." minute(s)");
+                $this->utils->logToFileAndPrint("[*] Waiting 1 minute");
                 sleep(60);
                 fwrite($this->socket, 'JOIN '.$this->config['channel']."\r\n");
             } else if ($this->utils->contains($rawOutput, '474')) { // ERR_BANNEDFROMCHAN
                 $this->utils->logToFileAndPrint("[-] Could not join ".$this->config['channel'].". Error: banned from channel");
-                $this->utils->logToFileAndPrint("[*] Waiting ".$this->config['timeout']." minute(s)");
+                $this->utils->logToFileAndPrint("[*] Waiting 1 minute");
                 sleep(60);
                 fwrite($this->socket, 'JOIN '.$this->config['channel']."\r\n");
             }
@@ -129,33 +140,33 @@ class VotebanBot {
                     !$this->utils->isAdmin($banProfile['nickname'])) {
                 $this->utils->logToFileAndPrint("[+] Voteban started on ".$banProfile['nickname']." with reason \"".$initProfile['reason']."\" by ".$initProfile['nickname']);
                 if ($this->utils->shouldSendNotice()) {
-                    fwrite($this->socket, 'NOTICE '.$this->config['channel'].' Voteban started on '.$banProfile['nickname']."\r\n");
+                    fwrite($this->socket, 'NOTICE '.$this->config['channel'].' :Voteban started on '.$banProfile['nickname']."\r\n");
                 } else {
-                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Voteban started on '.$banProfile['nickname']."\r\n");
+                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Voteban started on '.$banProfile['nickname']."\r\n");
                 }
-                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' '.$this->utils->calculateVoteCount(count($nameArr), $this->config['percentage']).' votes are needed to end voting before '.$this->config['timeout'].' minute mark. The user will be banned if more !yes votes were given. Give your vote with !yes or !no, you can only vote once.'."\r\n");
+                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :'.$this->utils->calculateVoteCount(count($nameArr), $this->config['percentage']).' votes are needed to end voting before '.$this->config['timeout'].' minute mark. The user will be banned if more !yes votes were given. Give your vote with !yes or !no, you can only vote once.'."\r\n");
                 $res = $this->countVotes($initProfile, $banProfile, $nameArr);
                 if ($res['shouldBan'] && !$res['cancelled'] && !$res['tie']) {
                     $this->utils->logToFileAndPrint("[+] User ".$banProfile['nickname']." was banned with reason \"".$initProfile['reason']."\"");
-                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Majority has found the user '.$banProfile['nickname']." guilty.\r\n");
+                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Majority has found the user '.$banProfile['nickname']." guilty.\r\n");
                     fwrite($this->socket, 'MODE '.$this->config['channel'].' +b '.$banProfile['banmask']."\r\n");
                     fwrite($this->socket, 'KICK '.$this->config['channel'].' '.$banProfile['nickname'].' '.$initProfile['reason']."\r\n");
                 } else if (!$res['shouldBan'] && !$res['cancelled'] && !$res['tie']) {
                     $this->utils->logToFileAndPrint("[+] User ".$banProfile['nickname']." was NOT banned with reason \"".$initProfile['reason']."\"");
-                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Majority has found the user '.$banProfile['nickname']." NOT guilty.\r\n");
+                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Majority has found the user '.$banProfile['nickname']." NOT guilty.\r\n");
                 } else if ($res['tie'] && !$res['cancelled']) {
                     $this->utils->logToFileAndPrint("[+] User ".$banProfile['nickname']." was NOT banned with reason \"".$initProfile['reason']."\"");
-                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' It\'s a tie, user '.$banProfile['nickname']." is not banned.\r\n");
+                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :It\'s a tie, user '.$banProfile['nickname']." is not banned.\r\n");
                 } else if ($res['cancelled']) {
                     $this->utils->logToFileAndPrint("[+] Voteban was cancelled for user ".$banProfile['nickname']);
-                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Voteban was cancelled for '.$banProfile['nickname']."\r\n");
+                    fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Voteban was cancelled for '.$banProfile['nickname']."\r\n");
                 }
             } else {
                 $this->utils->logToFileAndPrint("[-] Voteban issued on ".$banProfile['nickname']." with reason \"".$initProfile['reason']."\" by ".$initProfile['nickname']);
-                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' '.$banProfile['nickname'].' cannot be banned.'."\r\n");
+                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :'.$banProfile['nickname'].' cannot be banned.'."\r\n");
             }
         } else {
-            fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Cannot initiate voting, need '.$this->config['minimum_users'].' or more users in the channel'."\r\n");
+            fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Cannot initiate voting, need '.$this->config['minimum_users'].' or more users in the channel'."\r\n");
             $this->utils->logToFileAndPrint("[-] Not enough users to start voting, need ".$this->config['minimum_users']);
         }
     }
@@ -196,7 +207,7 @@ class VotebanBot {
                     break;
                 }
             } else if ((count($lineParts) >= 4) && ($lineParts[3] == ':!votestatus')) {
-                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Received '.$yesCount.':'.$noCount.' (total: '.($yesCount+$noCount).') votes. Time left for voting: '.$this->utils->formatTimeLeft((time() - $startTime))."\r\n");
+                fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Received '.$yesCount.':'.$noCount.' (total: '.($yesCount+$noCount).') votes. Time left for voting: '.$this->utils->formatTimeLeft((time() - $startTime))."\r\n");
                 if ($this->config['verbose_output']) {
                     print "[+] Responded to !votestatus command\n";
                 }
@@ -241,7 +252,7 @@ class VotebanBot {
             }
             // $rawOutput = fgets($this->socket);
         }
-        fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' Voting has ended.'."\r\n");
+        fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' :Voting has ended.'."\r\n");
         $res['shouldBan'] = $yesCount > $noCount;
         $res['tie'] = $yesCount == $noCount;
         return $res;
@@ -337,6 +348,7 @@ class VotebanBot {
                     if ($this->utils->isAdmin($initNickname) && $this->isAuthenticated($initNickname)) {
                         $this->utils->logToFileAndPrint("[+] ".$initNickname." re-read lists");
                         $this->utils->readLists();
+                        fwrite($this->socket, 'NOTICE '.$initNickname.' Lists re-read'."\r\n");
                     } else {
                         $this->utils->logToFileAndPrint("[-] ".$initNickname." tried to use !reload command");
                     }
@@ -347,17 +359,17 @@ class VotebanBot {
                             switch (strtolower($msg[4])) {
                                 case 'whitelist': $this->utils->addToWhiteList($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Added '.$msg[5].' to whitelist');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Added '.$msg[5].' to whitelist'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Added '.$msg[5].' to whitelist'."\r\n");
                                                   break;
                                                   
                                 case 'votelist': $this->utils->addToAllowedToVote($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Added '.$msg[5].' to allowed to vote list');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Added '.$msg[5].' to allowed to vote list'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Added '.$msg[5].' to allowed to vote list'."\r\n");
                                                   break;
                                                   
                                 case 'adminlist': $this->utils->addToAdminList($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Added '.$msg[5].' to admin list');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Added '.$msg[5].' to admin list'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Added '.$msg[5].' to admin list'."\r\n");
                                                   break;
                             }
                         }
@@ -369,17 +381,17 @@ class VotebanBot {
                             switch (strtolower($msg[4])) {
                                 case 'whitelist': $this->utils->removeFromWhiteList($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Removed '.$msg[5].' from whitelist');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Removed '.$msg[5].' from whitelist'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Removed '.$msg[5].' from whitelist'."\r\n");
                                                   break;
                                                   
                                 case 'votelist': $this->utils->removeFromAllowedToVote($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Removed '.$msg[5].' from allowed to vote list');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Removed '.$msg[5].' from allowed to vote list'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Removed '.$msg[5].' from allowed to vote list'."\r\n");
                                                   break;
                                                   
                                 case 'adminlist': $this->utils->removeFromAdminList($msg[5]);
                                                   $this->utils->logToFileAndPrint('[+] Removed '.$msg[5].' from admin list');
-                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' Removed '.$msg[5].' from admin list'."\r\n");
+                                                  fwrite($this->socket, 'NOTICE '.$initNickname.' :Removed '.$msg[5].' from admin list'."\r\n");
                                                   break;
                             }
                         }
@@ -392,10 +404,10 @@ class VotebanBot {
                             if ($newConfig != null) {
                                 $this->config = $newConfig;
                                 $this->utils->logToFileAndPrint('[+] Changed config property "'.$msg[4].'" to "'.$msg[5].'"');
-                                fwrite($this->socket, 'NOTICE '.$initNickname.' Changed config property "'.$msg[4].'" to "'.$msg[5].'"'."\r\n");
+                                fwrite($this->socket, 'NOTICE '.$initNickname.' :Changed config property "'.$msg[4].'" to "'.$msg[5].'"'."\r\n");
                             } else {
                                 $this->utils->logToFileAndPrint('[-] Invalid data for property "'.$msg[4].'"');
-                                fwrite($this->socket, 'NOTICE '.$initNickname.' Invalid data for property "'.$msg[4].'"'."\r\n");
+                                fwrite($this->socket, 'NOTICE '.$initNickname.' :Invalid data for property "'.$msg[4].'"'."\r\n");
                             }
                         }
                     }
@@ -404,12 +416,13 @@ class VotebanBot {
                     if ($this->utils->isAdmin($initNickname) && $this->isAuthenticated($initNickname)) {
                         $this->config = $this->utils->readConfig($this->argv);
                         $this->utils->logToFileAndPrint('[+] '.$initNickname.' re-read configs');
+                        fwrite($this->socket, 'NOTICE '.$initNickname.' :Re-read configs'."\r\n");
                     }
                 } else if ($msg[3] == ':!uptime') {
                     $initNickname = $this->utils->extractNickname($msg[0]);
                     if ($this->utils->isAdmin($initNickname) && $this->isAuthenticated($initNickname)) {
                         $uptime = $this->utils->getUptime();
-                        fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' '.$uptime."\r\n");
+                        fwrite($this->socket, 'NOTICE '.$initNickname.' :'.$uptime."\r\n");
                         if ($this->config['verbose_output']) {
                             $this->utils->logToFileAndPrint('[+] Responded to !uptime command');
                         }
@@ -417,7 +430,9 @@ class VotebanBot {
                 }
             }
             $rawOutput = fgets($this->socket);
-            // print $rawOutput;
+            if ($rawOutput != '') {
+                print $rawOutput;
+            }
             $this->linkClosed = $this->utils->connectionAborted($rawOutput);
             // print $this->linkClosed;
             $this->wasKicked = $this->utils->wasKicked($rawOutput, $this->config['nick']);
@@ -456,9 +471,9 @@ class VotebanBot {
     //=============================================================
     // Responds to !info command
     private function printInfo($channel) {
-        fwrite($this->socket, 'PRIVMSG '.$channel.' Voteban bot v0.5, Kulverstukas, 2014. Coded in PHP.'."\r\n");
+        fwrite($this->socket, 'PRIVMSG '.$channel.' :Voteban bot, Kulverstukas, 2014. Coded in PHP.'."\r\n");
         usleep(100);
-        fwrite($this->socket, 'PRIVMSG '.$channel.' Usage: '.
+        fwrite($this->socket, 'PRIVMSG '.$channel.' :Usage: '.
                         'Initiate voteban: "!voteban nickname reason". '.
                         'Vote: !yes or !no when voting begins.'."\r\n");
         if ($this->config['verbose_output']) {

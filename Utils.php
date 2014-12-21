@@ -82,7 +82,7 @@ class Utils {
                 while (($line = fgets($fHandle)) !== false) {
                     if (($line[0] != ';') && (trim($line) != '')) {
                         array_push($this->whitelistArr, trim($line));
-                        //print $line;
+                        // print $line;
                     }
                 }
                 fclose($fHandle);
@@ -329,7 +329,7 @@ class Utils {
                                 case 'port': $this->config['port'] = intval($tmp[1]); break;
                                 case 'nick': $this->config['nick'] = $tmp[1]; break;
                                 case 'name': $this->config['name'] = $tmp[1]; break;
-                                case 'channel': $this->config['channel'] = $tmp[1]; break;
+                                case 'channel': $this->config['channel'] = strtolower($tmp[1]); break;
                                 case 'registered': $this->config['registered'] = (strtolower($tmp[1]) == "yes") ? true : false; break;
                                 case 'nickserv_passwd': $this->config['nickserv_passwd'] = $tmp[1]; break;
                                 case 'timeout': $this->config['timeout'] = intval($tmp[1]); break;
