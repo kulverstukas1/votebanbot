@@ -334,7 +334,7 @@ class VotebanBot {
                     $initProfile['reason'] = $this->utils->extractReason($rawOutput);
                     // print "\n".$initProfile['hostname']."\n";
                     // another if... this doesn't allow people to ban themselves
-                    if (($msg[4] != $initProfile['nickname']) && ($initProfile['reason'] != '')) {
+                    if ((strlen($initProfile['reason']) <= $this->config['ignore_longer']) && ($msg[4] != $initProfile['nickname']) && ($initProfile['reason'] != '')) {
                         $canStartVoting = true;
                         if (!$this->config['allow_guest_votes']) { // see if the user has authenticated, since no guest votes are allowed
                             $canStartVoting = $this->utils->isAllowedToVote($initProfile['nickname']) && $this->isAuthenticated($initProfile['nickname']);

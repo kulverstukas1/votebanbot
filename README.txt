@@ -39,7 +39,7 @@ There are several commands available separately for a user and a bot admin.
  * !reload == re-reads the lists from file to memory.
  * !add whitelist/votelist/adminlist <nickname> == adds the specified nickname to the speficied list and saves to a file.
  * !remove whitelist/votelist/adminlist <nickname> == removes the specified nickname from the speficied list and saves to a file.
- * !change == change a configuration option. Not all options on the file can be changed through IRC interface. What can be changed are timeout, minimum_users, percentage, allow_guest_votes, send_notice.
+ * !change == change a configuration option. Not all options on the file can be changed through IRC interface. What can be changed are timeout, minimum_users, percentage, allow_guest_votes, send_notice, ignore_longer_than.
  * !reconfig == re-reads the configuration from file to memory. Not all values gets reloaded, some changes require the bot to be killed and started again.
  * !cancel == also a user command, it allows any admin to end the voting session.
  * !uptime == shows for how long the bot is connected.

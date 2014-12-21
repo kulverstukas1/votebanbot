@@ -34,7 +34,8 @@ class Utils {
                         'percentage' => 50, // how many votes should the bot require in percents
                         'allow_guest_votes' => false,
                         'send_notice' => true,
-                        'verbose_output' => false
+                        'verbose_output' => false,
+                        'ignore_longer' => 50
                     );
     
 //=============================================================
@@ -338,6 +339,7 @@ class Utils {
                                 case 'allow_guest_votes': $this->config['allow_guest_votes'] = (strtolower($tmp[1]) == "yes") ? true : false; break;
                                 case 'send_notice': $this->config['send_notice'] = (strtolower($tmp[1]) == "yes") ? true : false; break;
                                 case 'verbose_output': $this->config['verbose_output'] = (strtolower($tmp[1]) == "yes") ? true : false; break;
+                                case 'ignore_longer_than': $this->config['ignore_longer'] = intval($tmp[1]); break;
                             }
                             // print $tmp[1]."\n";
                         }
@@ -372,6 +374,11 @@ class Utils {
                                   break;
             case 'percentage': if (is_numeric($value)) {
                                    $newData = str_replace('percentage='.$this->config['percentage'], 'percentage='.$value, $data);
+                                   $this->config['percentage'] = $value;
+                               }
+                               break;
+            case 'ignore_longer_than': if (is_numeric($value)) {
+                                   $newData = str_replace('ignore_longer_than='.$this->config['ignore_longer'], 'ignore_longer_than='.$value, $data);
                                    $this->config['percentage'] = $value;
                                }
                                break;
