@@ -392,7 +392,7 @@ class VotebanBot {
                             if ($newConfig != null) {
                                 $this->config = $newConfig;
                                 $this->utils->logToFileAndPrint('[+] Changed config property "'.$msg[4].'" to "'.$msg[5].'"');
-                                fwrite($this->socket, 'NOTICE '.'kulverstukas'.' Changed config property "'.$msg[4].'" to "'.$msg[5].'"'."\r\n");
+                                fwrite($this->socket, 'NOTICE '.$initNickname.' Changed config property "'.$msg[4].'" to "'.$msg[5].'"'."\r\n");
                             } else {
                                 $this->utils->logToFileAndPrint('[-] Invalid data for property "'.$msg[4].'"');
                                 fwrite($this->socket, 'NOTICE '.$initNickname.' Invalid data for property "'.$msg[4].'"'."\r\n");
@@ -404,6 +404,15 @@ class VotebanBot {
                     if ($this->utils->isAdmin($initNickname) && $this->isAuthenticated($initNickname)) {
                         $this->config = $this->utils->readConfig($this->argv);
                         $this->utils->logToFileAndPrint('[+] '.$initNickname.' re-read configs');
+                    }
+                } else if ($msg[3] == ':!uptime') {
+                    $initNickname = $this->utils->extractNickname($msg[0]);
+                    if ($this->utils->isAdmin($initNickname) && $this->isAuthenticated($initNickname)) {
+                        $uptime = $this->utils->getUptime();
+                        fwrite($this->socket, 'PRIVMSG '.$this->config['channel'].' '.$uptime."\r\n");
+                        if ($this->config['verbose_output']) {
+                            $this->utils->logToFileAndPrint('[+] Responded to !uptime command');
+                        }
                     }
                 }
             }

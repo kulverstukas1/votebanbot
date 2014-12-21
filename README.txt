@@ -42,6 +42,7 @@ There are several commands available separately for a user and a bot admin.
  * !change == change a configuration option. Not all options on the file can be changed through IRC interface. What can be changed are timeout, minimum_users, percentage, allow_guest_votes, send_notice.
  * !reconfig == re-reads the configuration from file to memory. Not all values gets reloaded, some changes require the bot to be killed and started again.
  * !cancel == also a user command, it allows any admin to end the voting session.
+ * !uptime == shows for how long the bot is connected.
 
 
 ~ 0x03 - Operation modes

@@ -14,6 +14,7 @@ class Utils {
     private $admins = 'admins.txt'; // a list of people that are allowed to administrate the bot
     private $logFolder = "logs";
     private $logFile = "%s-%s-%s.txt"; // don't touch!
+    private $connectTime = 0;
     private $argv = array();
     private $whitelistArr = array();
     private $allowedToVoteArr = array();
@@ -36,19 +37,32 @@ class Utils {
                         'verbose_output' => false
                     );
     
-    //=============================================================
+//=============================================================
     function __construct($argv) {
         $this->argv = $argv;
         $this->readLists();
+        $this->connectTime = time();
     }
-    //=============================================================
+//=============================================================
+    public function getUptime() {
+        $now = time();
+        $uptime = $now - $this->connectTime;
+        $days = floor($uptime/60/60/24);
+        $hours = $uptime/60/60%24;
+        $mins = $uptime/60%60;
+        $secs = $uptime%60;
+        $tmpa = 'Connected on '.strftime("%Y.%m.%d", $this->connectTime);
+        $tmpb = "Uptime: $days days $hours hours $mins minutes and $secs seconds";
+        return $tmpa.'. '.$tmpb;
+    }
+//=============================================================
     // Calculate how many votes are required based on the percentage
     // -3 is to make up for 3 people that cannot vote:
     // 1 bot, 1 that is getting banned and 1 that initiated the voting
     public function calculateVoteCount($numOfPeople, $percentage) {
         return floor(($numOfPeople-3)*$percentage/100);
     }
-    //=============================================================
+//=============================================================
     // removes all the user mode symbols to make clean nicknames
     public function stripModeSymbols($nickname) {
         $symbolArr = array('&', '+', '%', '@', ':', '~');
@@ -57,7 +71,7 @@ class Utils {
         }
         return trim($nickname);
     }
-    //=============================================================
+//=============================================================
     // Reads lists into arrays, doesn't support in-line comments
     public function readLists() {
         // reads whitelist
