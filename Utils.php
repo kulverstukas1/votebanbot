@@ -77,6 +77,7 @@ class Utils {
                 exit(1);
             }
         } else { // file doesn't exist, let's create it!
+            print "[-] Couldn't find ".$this->whitelist." - created an empty one. Consider adding something to it!";
             $this->createWhitelistFile();
         }
         
@@ -97,6 +98,7 @@ class Utils {
                 exit(1);
             }
         } else {
+            print "[-] Couldn't find ".$this->allowedToVote()." - created an empty one. Consider adding something to it!";
             $this->createAllowedToVoteFile();
         }
         
@@ -117,6 +119,7 @@ class Utils {
                 exit(1);
             }
         } else {
+            print "[-] Couldn't find ".$this->admins." - created an empty one. Consider adding something to it!";
             $this->createAdminFile();
         }
         

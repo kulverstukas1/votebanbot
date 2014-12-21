@@ -55,6 +55,11 @@ class VotebanBot {
                     break;
                 }
             }
+            // if the link gets closed, this is where it'll go down
+            if ($this->utils->connectionAborted(fgets($this->socket))) {
+                print "[-] Link was closed! Try changing your nickname.";
+                exit(1);
+            }
             $this->utils->logToFileAndPrint("[+] Connected");
             // usleep(100);
             
@@ -87,9 +92,9 @@ class VotebanBot {
         fwrite($this->socket, 'JOIN '.$this->config['channel']."\r\n");
         while (true) {
             $rawOutput = fgets($this->socket);
-            // if ($rawOutput != '') {
-                // print $rawOutput;
-            // }
+            if ($rawOutput != '') {
+                print $rawOutput;
+            }
             if (explode(' ', $rawOutput)[0] == 'PING') {
                 $this->sendPong(explode(' ', $rawOutput)[1]);
             } else if ($this->utils->contains($rawOutput, '366')) { // end of /NAMES list
