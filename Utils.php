@@ -164,21 +164,21 @@ class Utils {
     public function addToWhiteList($nickname) {
         $nickname = strtolower($nickname);
         if (!in_array($nickname, $this->whitelistArr)) {
-            file_put_contents($this->whitelist, $nickname."\r\n", FILE_APPEND);
+            file_put_contents($this->whitelist, "\r\n".$nickname, FILE_APPEND);
             array_push($this->whitelistArr, $nickname);
         }
     }
     public function addToAllowedToVote($nickname) {
         $nickname = strtolower($nickname);
         if (!in_array($nickname, $this->allowedToVoteArr)) {
-            file_put_contents($this->allowedToVote, $nickname."\r\n", FILE_APPEND);
+            file_put_contents($this->allowedToVote, "\r\n".$nickname, FILE_APPEND);
             array_push($this->allowedToVoteArr, $nickname);
         }
     }
     public function addToAdminList($nickname) {
         $nickname = strtolower($nickname);
         if (!in_array($nickname, $this->adminArr)) {
-            file_put_contents($this->admins, $nickname."\r\n", FILE_APPEND);
+            file_put_contents($this->admins, "\r\n".$nickname, FILE_APPEND);
             array_push($this->adminArr, $nickname);
         }
     }

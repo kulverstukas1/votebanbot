@@ -23,7 +23,7 @@ class VotebanBot {
     private $linkClosed = false; // could use a better solution doe
     private $wasKicked = false;
     private $argv = array();
-    private $DEBUG_MODE = true; // for devs
+    private $DEBUG_MODE = false; // for devs
     
     //=============================================================
     function __construct($argv) {
@@ -189,7 +189,7 @@ class VotebanBot {
         
         $rawOutput = "";
         // $timer = 0;
-        while (true) {
+        while (!$this->linkClosed && !$this->wasKicked) {
             $rawOutput = fgets($this->socket);
             // print $rawOutput;
             // $timer++;
@@ -253,11 +253,18 @@ class VotebanBot {
                 break; // get the fuck out if time has passed
             }
             // $rawOutput = fgets($this->socket);
+            $this->linkClosed = $this->utils->connectionAborted($rawOutput);
+            // print $this->linkClosed;
+            $this->wasKicked = $this->utils->wasKicked($rawOutput, $this->config['nick']);
         }
-        fwrite($this->socket, "PRIVMSG ".$this->config['channel']." :Voting has ended for user ".$banProfile['nickname']." (".$banProfile['hostname'].")\r\n");
-        $res['shouldBan'] = $yesCount > $noCount;
-        $res['tie'] = $yesCount == $noCount;
-        return $res;
+        if ($this->linkClosed || $this->wasKicked) {
+            $this->begin(true); // go straight to handling the event, if the bot got kicked or something...
+        } else {
+            fwrite($this->socket, "PRIVMSG ".$this->config['channel']." :Voting has ended for user ".$banProfile['nickname']." (".$banProfile['hostname'].")\r\n");
+            $res['shouldBan'] = $yesCount > $noCount;
+            $res['tie'] = $yesCount == $noCount;
+            return $res;
+        }
     }
     //=============================================================
     // Parses the output of NAMES command and returns an array
@@ -493,8 +500,10 @@ class VotebanBot {
     }
     //=============================================================
     // Base function that receives data from the socket and acts accordingly
-    private function begin() {
-        $this->processOutput();
+    private function begin($bypassProcessing = false) {
+        if (!$bypassProcessing) {
+            $this->processOutput();
+        }
         
         if ($this->linkClosed) {
             $this->utils->logToFileAndPrint("[!] Link was closed, reconnecting...");
